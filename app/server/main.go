@@ -6,10 +6,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/pyroscope-io/client/pyroscope"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/Shopify/sarama/otelsarama"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -73,6 +75,34 @@ func main() {
 			log.Fatal("failed to shutdown TracerProvider: %w", err)
 		}
 	}()
+
+	// profiling 設定
+	runtime.SetMutexProfileFraction(1)
+	runtime.SetBlockProfileRate(1)
+	pyroscope.Start(pyroscope.Config{
+		ApplicationName: "kafka-consumer",
+		ServerAddress:   "http://pyroscope.pyroscope.svc.cluster.local:4040",
+		Logger:          pyroscope.StandardLogger,
+
+		// you can provide static tags via a map:
+		Tags: map[string]string{"hostname": "kafka-consumer"},
+
+		ProfileTypes: []pyroscope.ProfileType{
+			// these profile types are enabled by default:
+			pyroscope.ProfileCPU,
+			pyroscope.ProfileAllocObjects,
+			pyroscope.ProfileAllocSpace,
+			pyroscope.ProfileInuseObjects,
+			pyroscope.ProfileInuseSpace,
+
+			// these profile types are optional:
+			pyroscope.ProfileGoroutines,
+			pyroscope.ProfileMutexCount,
+			pyroscope.ProfileMutexDuration,
+			pyroscope.ProfileBlockCount,
+			pyroscope.ProfileBlockDuration,
+		},
+	})
 
 	// Kafkaブローカーのアドレスとポートを設定します
 	brokerList := []string{"kafka-cluster-0.kafka-cluster-headless.kafka.svc.cluster.local:9092"}
