@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-client
+  labels:
+    app: kafka-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-client
+  template:
+    metadata:
+      labels:
+        app: kafka-client
+    spec:
+      containers:
+        - name: kafka-client
+          image: ghcr.io/keisukesakasai/work-kafka-otel/client:latest
+          ports:
+            - containerPort: 8080
+          imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-client-service
+spec:
+  selector:
+    app: kafka-client
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
