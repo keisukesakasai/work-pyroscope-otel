@@ -1,33 +1,85 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kafka-client
+  name: kafka-client-v1
   labels:
-    app: kafka-client
+    app: kafka-client-v1
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kafka-client
+      app: kafka-client-v1
   template:
     metadata:
       labels:
-        app: kafka-client
+        app: kafka-client-v1
     spec:
       containers:
-        - name: kafka-client
-          image: ghcr.io/keisukesakasai/work-pyroscope-otel/client:latest
+        - name: kafka-client-v1
+          image: ghcr.io/keisukesakasai/work-pyroscope-otel/client:v1
           ports:
             - containerPort: 8080
           imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 250m
+              memory: 250Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi          
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: kafka-client-service
+  name: kafka-client-service-v1
 spec:
   selector:
-    app: kafka-client
+    app: kafka-client-v1
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-client-v2
+  labels:
+    app: kafka-client-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-client-v2
+  template:
+    metadata:
+      labels:
+        app: kafka-client-v2
+    spec:
+      shareProcessNamespace: true
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: kafka-client-v2
+          image: ghcr.io/keisukesakasai/work-pyroscope-otel/client:v2
+          ports:
+            - containerPort: 8080
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 250m
+              memory: 250Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-client-service-v2
+spec:
+  selector:
+    app: kafka-client-v2
   ports:
     - protocol: TCP
       port: 8080

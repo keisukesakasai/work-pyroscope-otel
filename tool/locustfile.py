@@ -1,12 +1,9 @@
-from locust import HttpUser, TaskSet, task, between, constant
+from locust import HttpUser, task, constant_pacing
 
-class UserBehavior(TaskSet):
+class HelloWorldUser(HttpUser):
+    #  1タスク = 1秒間に1回リクエストを送信する
+    wait_time = constant_pacing(1)
 
-    @task(1)
-    def search(self):
-        self.client.get("/hoge", verify=False)
-
-class WebsiteUser(HttpUser):
-
-    tasks = {UserBehavior:1}
-    wait_time = constant(0)
+    @task
+    def hello_world(self):
+        self.client.get("/")

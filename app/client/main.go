@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"runtime"
 	"strings"
@@ -92,7 +93,10 @@ func main() {
 		Logger:          pyroscope.StandardLogger,
 
 		// you can provide static tags via a map:
-		Tags: map[string]string{"hostname": "kafka-producer"},
+		Tags: map[string]string{
+			"hostname": "kafka-producer",
+			"version":  "v2.0.0",
+		},
 
 		ProfileTypes: []pyroscope.ProfileType{
 			// these profile types are enabled by default:
@@ -134,6 +138,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		// ロジック
+		dummyData := create(1000000)
+		counter(dummyData)
 
 		// 送信するメッセージを作成します
 		topic := "topic-otel"
@@ -182,4 +190,30 @@ func newAccessLogProducer(brokerList []string) (sarama.AsyncProducer, error) {
 	}()
 
 	return producer, nil
+}
+
+func create(num int) []int {
+	slice := make([]int, num)
+	for i := 0; i < num; i++ {
+		slice[i] = rand.Intn(2)
+	}
+	return slice
+}
+
+// v1
+// func counter(slice []int) int {
+// 	sort.Ints(slice)
+// 	index := sort.SearchInts(slice, 1)
+// 	return len(slice) - index
+// }
+
+// v2
+func counter(slice []int) int {
+	total := 0
+	for _, value := range slice {
+		if value == 1 {
+			total++
+		}
+	}
+	return total
 }
