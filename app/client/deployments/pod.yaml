@@ -16,10 +16,15 @@ spec:
     spec:
       containers:
         - name: kafka-client-v1
-          image: ghcr.io/keisukesakasai/work-pyroscope-otel/client:v1
+          image: ghcr.io/keisukesakasai/work-pyroscope-otel/client:latest
           ports:
             - containerPort: 8080
           imagePullPolicy: Always
+          env:  
+            - name: NUM_RUNDOM_DATA
+              value: "1000000"
+            - name: APP_VERSION
+              value: "v1.0.0"
           resources:
             limits:
               cpu: 250m
@@ -61,10 +66,15 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: kafka-client-v2
-          image: ghcr.io/keisukesakasai/work-pyroscope-otel/client:v2
+          image: ghcr.io/keisukesakasai/work-pyroscope-otel/client:latest
           ports:
             - containerPort: 8080
           imagePullPolicy: Always
+          env:  
+            - name: NUM_RUNDOM_DATA
+              value: "1000000"
+            - name: APP_VERSION
+              value: "v2.0.0"          
           resources:
             limits:
               cpu: 250m

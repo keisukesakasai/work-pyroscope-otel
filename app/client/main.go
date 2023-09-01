@@ -7,7 +7,10 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"runtime"
+	"sort"
+	"strconv"
 	"strings"
 
 	_ "time/tzdata"
@@ -84,6 +87,11 @@ func main() {
 		}
 	}()
 
+	// 環境変数
+	numRandomDataStr := os.Getenv("NUM_RUNDOM_DATA")
+	numRandomData, _ := strconv.Atoi(numRandomDataStr)
+	appVersion := os.Getenv("APP_VERSION")
+
 	// profiling 設定
 	runtime.SetMutexProfileFraction(1)
 	runtime.SetBlockProfileRate(1)
@@ -95,7 +103,7 @@ func main() {
 		// you can provide static tags via a map:
 		Tags: map[string]string{
 			"hostname": "kafka-producer",
-			"version":  "v2.0.0",
+			"version":  appVersion,
 		},
 
 		ProfileTypes: []pyroscope.ProfileType{
@@ -140,8 +148,14 @@ func main() {
 		}
 
 		// ロジック
-		dummyData := create(1000000)
-		counter(dummyData)
+		dummyData := create(numRandomData)
+
+		if appVersion == "v1.0.0" {
+			counter_v1(dummyData)
+		}
+		if appVersion == "v2.0.0" {
+			counter_v2(dummyData)
+		}
 
 		// 送信するメッセージを作成します
 		topic := "topic-otel"
@@ -200,15 +214,13 @@ func create(num int) []int {
 	return slice
 }
 
-// v1
-// func counter(slice []int) int {
-// 	sort.Ints(slice)
-// 	index := sort.SearchInts(slice, 1)
-// 	return len(slice) - index
-// }
+func counter_v1(slice []int) int {
+	sort.Ints(slice)
+	index := sort.SearchInts(slice, 1)
+	return len(slice) - index
+}
 
-// v2
-func counter(slice []int) int {
+func counter_v2(slice []int) int {
 	total := 0
 	for _, value := range slice {
 		if value == 1 {
