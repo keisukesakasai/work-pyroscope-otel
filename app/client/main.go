@@ -148,14 +148,7 @@ func main() {
 		}
 
 		// ロジック
-		dummyData := create(numRandomData)
-
-		if appVersion == "v1.0.0" {
-			counter_v1(dummyData)
-		}
-		if appVersion == "v2.0.0" {
-			counter_v2(dummyData)
-		}
+		calcTargetLogic(numRandomData, appVersion)
 
 		// 送信するメッセージを作成します
 		topic := "topic-otel"
@@ -206,26 +199,37 @@ func newAccessLogProducer(brokerList []string) (sarama.AsyncProducer, error) {
 	return producer, nil
 }
 
+func calcTargetLogic(numRandomData int, appVersion string) (total int) {
+	dummyData := create(numRandomData)
+	total = count(dummyData, appVersion)
+
+	return total
+}
+
 func create(num int) []int {
 	slice := make([]int, num)
-	for i := 0; i < num; i++ {
+	for i := range slice {
 		slice[i] = rand.Intn(2)
 	}
 	return slice
 }
 
-func counter_v1(slice []int) int {
-	sort.Ints(slice)
-	index := sort.SearchInts(slice, 1)
-	return len(slice) - index
-}
-
-func counter_v2(slice []int) int {
-	total := 0
-	for _, value := range slice {
-		if value == 1 {
-			total++
-		}
+func count(dummyData []int, appVersion string) (total int) {
+	if appVersion == "v1.0.0" {
+		sort.Ints(dummyData)
+		index := sort.SearchInts(dummyData, 1)
+		return len(dummyData) - index
 	}
-	return total
+
+	if appVersion == "v2.0.0" {
+		total := 0
+		for _, value := range dummyData {
+			if value == 1 {
+				total++
+			}
+		}
+		return total
+	}
+
+	return
 }
