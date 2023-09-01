@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calculator-v1
+  labels:
+    app: calculator-v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calculator-v1
+  template:
+    metadata:
+      labels:
+        app: calculator-v1
+    spec:
+      containers:
+        - name: calculator-v1
+          image: ghcr.io/keisukesakasai/work-pyroscope-otel/calculator:latest
+          ports:
+            - containerPort: 8080
+          imagePullPolicy: Always
+          env:  
+            - name: NUM_RUNDOM_DATA
+              value: "100000"
+            - name: APP_VERSION
+              value: "v1.0.0"
+          resources:
+            limits:
+              cpu: 250m
+              memory: 250Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: calculator-service-v1
+spec:
+  selector:
+    app: calculator-v1
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calculator-v2
+  labels:
+    app: calculator-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calculator-v2
+  template:
+    metadata:
+      labels:
+        app: calculator-v2
+    spec:
+      # shareProcessNamespace: true
+      # securityContext: {}
+      # terminationGracePeriodSeconds: 30
+      containers:
+        - name: calculator-v2
+          image: ghcr.io/keisukesakasai/work-pyroscope-otel/calculator:latest
+          ports:
+            - containerPort: 8080
+          imagePullPolicy: Always
+          env:  
+            - name: NUM_RUNDOM_DATA
+              value: "100000"
+            - name: APP_VERSION
+              value: "v2.0.0"          
+          resources:
+            limits:
+              cpu: 250m
+              memory: 250Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: calculator-service-v2
+spec:
+  selector:
+    app: calculator-v2
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
