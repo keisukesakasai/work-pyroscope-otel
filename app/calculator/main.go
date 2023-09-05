@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"os"
 	"runtime"
@@ -17,8 +17,6 @@ import (
 
 func main() {
 	// 環境変数
-	numRandomDataStr := os.Getenv("NUM_RUNDOM_DATA")
-	numRandomData, _ := strconv.Atoi(numRandomDataStr)
 	appVersion := os.Getenv("APP_VERSION")
 
 	// profiling 設定
@@ -56,42 +54,67 @@ func main() {
 		}
 
 		// ロジック
-		calcTargetLogic(numRandomData, appVersion)
+		count := calcTargetLogic(appVersion)
+		fmt.Println("count: ", count)
 	})
 
 	r.Run(":8080")
 }
 
-func calcTargetLogic(numRandomData int, appVersion string) (total int) {
-	dummyData := create(numRandomData)
+func calcTargetLogic(appVersion string) (total int) {
+	dummyData, err := read("./data/input.txt")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	total = count(dummyData, appVersion)
 
 	return total
 }
 
-func create(num int) []int {
-	slice := make([]int, num)
-	for i := range slice {
-		slice[i] = rand.Intn(2)
+func read(filename string) ([]int, error) {
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file: %v", err)
 	}
-	return slice
+
+	var dummyData []int
+	for _, char := range string(content) {
+		value, err := strconv.Atoi(string(char))
+		if err != nil {
+			return nil, fmt.Errorf("error converting character to int: %v", err)
+		}
+		if value != 0 && value != 1 {
+			return nil, fmt.Errorf("invalid value in file: %d", value)
+		}
+		dummyData = append(dummyData, value)
+	}
+
+	return dummyData, nil
 }
 
 func count(dummyData []int, appVersion string) (total int) {
 	switch appVersion {
 	case "v1.0.0":
-		sort.Ints(dummyData)
+		n := len(dummyData)
+		for i := 0; i < n; i++ {
+			for j := 0; j < n-i-1; j++ {
+				if dummyData[j] > dummyData[j+1] {
+					dummyData[j], dummyData[j+1] = dummyData[j+1], dummyData[j]
+				}
+			}
+		}
 		index := sort.SearchInts(dummyData, 1)
+		fmt.Println("index: ", index)
+
 		return len(dummyData) - index
 
 	case "v2.0.0":
-		total := 0
-		for _, value := range dummyData {
-			if value == 1 {
-				total++
-			}
-		}
-		return total
+		sort.Ints(dummyData)
+		index := sort.SearchInts(dummyData, 1)
+		fmt.Println("index: ", index)
+
+		return len(dummyData) - index
 
 	default:
 		return 0

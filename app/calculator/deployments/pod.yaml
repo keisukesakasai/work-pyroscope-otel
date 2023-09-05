@@ -32,6 +32,16 @@ spec:
             requests:
               cpu: 100m
               memory: 100Mi          
+          volumeMounts:                  # ボリュームマウントのセクションを追加
+            - name: config-volume
+              mountPath: /root/data 
+      volumes:                          # volumes セクションを追加
+        - name: config-volume
+          configMap:
+            name: inputdata
+            items:
+            - key: input.txt
+              path: input.txt
 ---
 apiVersion: v1
 kind: Service
@@ -82,6 +92,16 @@ spec:
             requests:
               cpu: 100m
               memory: 100Mi
+          volumeMounts:                  # ボリュームマウントのセクションを追加
+            - name: config-volume
+              mountPath: /root/data               
+      volumes:                          # volumes セクションを追加
+        - name: config-volume
+          configMap:
+            name: inputdata
+            items:
+            - key: input.txt
+              path: input.txt              
 ---
 apiVersion: v1
 kind: Service
