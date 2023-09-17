@@ -16,12 +16,24 @@ import (
 )
 
 func main() {
-	// 環境変数
+	// 環境変数からアプリバージョンを取得
 	appVersion := os.Getenv("APP_VERSION")
 
 	// profiling 設定
-	runtime.SetMutexProfileFraction(1)
-	runtime.SetBlockProfileRate(1)
+	/* Mutex Profile 設定（オプション）
+	mutexProfileRate は Mutex Profile の収集される頻度です。
+	mutexProfileRate = 1 のとき全ての Mutex Event が収集されます。
+	mutexProfileRate > 1 のとき mutexProfileRate 回のうち 1 回 Mutex Profile が収集されます。
+	*/
+	mutexProfileRate := 1
+	runtime.SetMutexProfileFraction(mutexProfileRate) //・・・(1)
+	/* Block Profile 設定（オプション）
+	blockProfileRate は Block Profile をサンプルする際の Block 時間（ns）です。
+	blockProfileRate = 0 のとき Block Profile が無効になります。
+	blockProfileRate > 0 のとき blockProfileRate n秒単位で Block ごとに Block Profile が収集されます。
+	*/
+	blockProfileRate := 1
+	runtime.SetBlockProfileRate(blockProfileRate) //・・・(2)
 	pyroscope.Start(pyroscope.Config{
 		ApplicationName: "calculator",
 		ServerAddress:   "http://pyroscope.pyroscope.svc.cluster.local:4040",
@@ -34,12 +46,21 @@ func main() {
 		},
 
 		ProfileTypes: []pyroscope.ProfileType{
-			// these profile types are enabled by default:
+			// デフォルトで取得するプロファイル
 			pyroscope.ProfileCPU,
 			pyroscope.ProfileAllocObjects,
 			pyroscope.ProfileAllocSpace,
 			pyroscope.ProfileInuseObjects,
 			pyroscope.ProfileInuseSpace,
+
+			// オプショナルで取得するプロファイル
+			pyroscope.ProfileGoroutines,
+			// ・・・(1) の設定が必要
+			pyroscope.ProfileMutexCount,
+			pyroscope.ProfileMutexDuration,
+			// ・・・(2) の設定が必要
+			pyroscope.ProfileBlockCount,
+			pyroscope.ProfileBlockDuration,
 		},
 	})
 
